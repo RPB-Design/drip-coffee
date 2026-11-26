@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Drip Brewer Flow Section</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: engineering lab notebook — calm, exact, numbers first
+   IDEA: a cutaway service drawing of the brewer that runs through one whole brew
+   PICTURE: the full front section with moving water levels and tracers riding the solved flow
+   COLOUR and TYPE: white sheet, near-black ink, copper accent for the heater; Barlow + Barlow Semi Condensed figures
+   LAYOUT: finding as title, key figures, section + brew timeline, then live readout, level chart, table, method */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121417);--ink:light-dark(#1b1916,#ebe7e2);--mute:light-dark(#5f5a54,#a39d96);--line:light-dark(#d9d4ce,#33373c);--panel:light-dark(#f3f1ee,#1b1e22);--cu:#b5652b;--steel:light-dark(#c9cdd1,#3c4248);--steel2:light-dark(#e4e7ea,#2a2f34)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(22px,4vw,52px) max(5vw,16px);max-width:1240px;margin:0 auto}
+h1{font:600 clamp(28px,4.4vw,46px)/1.05 "Barlow Semi Condensed",Barlow,sans-serif;margin:0 0 10px;text-wrap:balance;max-width:24ch}
+.lede{color:var(--mute);max-width:68ch;margin:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:22px}
+.kpi{background:var(--bg);padding:12px 14px}.kpi b{display:block;font:600 28px/1.1 "Barlow Semi Condensed",sans-serif;white-space:nowrap}.kpi span{font-size:13px;color:var(--mute)}
+.main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:28px;align-items:start}
+@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.fig{position:relative;width:100%;aspect-ratio:332/372;max-height:80vh;margin:0 auto}
+.fig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-wrap:wrap}
+.seg button,.btn{font:500 15px Barlow,sans-serif;min-height:44px;padding:0 13px;border:0;background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.btn{border:1px solid var(--line);border-radius:10px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--cu);outline-offset:2px}
+.time{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;margin:10px 0 4px}
+.time input{width:100%;accent-color:var(--cu);height:44px}
+.clock{font:600 22px/1 "Barlow Semi Condensed",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.phase{font-size:14px;color:var(--mute);min-height:22px}
+.legend{margin-top:8px;font-size:13px;color:var(--mute)}
+.bar{height:12px;border-radius:3px;margin:4px 0 2px}
+.ticks{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+.keys{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--mute);margin-top:8px}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:5px;border:1px solid rgba(20,16,12,.6)}
+.probe{margin-top:10px;padding:10px 12px;background:var(--panel);border-radius:10px;font-size:15px;min-height:64px}
+h2{font:600 22px/1.2 "Barlow Semi Condensed",sans-serif;margin:0 0 10px}
+.live{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:22px}
+.live div{background:var(--bg);padding:9px 12px}.live b{display:block;font:600 21px/1.15 "Barlow Semi Condensed",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}.live span{font-size:13px;color:var(--mute)}
+.chart{position:relative;height:190px;margin-bottom:6px}.chart svg{position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--mute)}td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--mute);margin-top:8px}
+details{border-top:1px solid var(--line);padding-top:12px}summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.method li{max-width:72ch;margin-bottom:6px}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:2px 0;padding-inline-start:7em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6.5em;margin-inline-start:-7em;color:var(--mute)}.stack td.n{text-align:start}}
+</style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
+<section class="band">
+<h1>The basket fills to half its depth, then drains in 35 seconds</h1>
+<p class="lede">A front section of a Moccamaster KBGV-style brewer, run through one complete brew. Cold water drains from the reservoir into the copper coil, and steam lifts it up the glass riser to the spray arm. It then drips through the brew basket and down the destratification tube into the carafe. Every water surface is free: its level comes out of the flow, not out of a guess.</p>
+<div class="kpis" id="kpis"></div>
+</section>
+<section class="band" style="padding-top:0">
+<div class="main">
+<div>
+<div class="ctl">
+<div class="seg" role="group" aria-label="Colour field">
+<button id="f-T" aria-pressed="true">Temperature</button><button id="f-U" aria-pressed="false">Speed</button><button id="f-P" aria-pressed="false">Pressure</button><button id="f-C" aria-pressed="false">Coffee strength</button>
+</div>
+<div class="seg" role="group" aria-label="Brew clock speed"><button id="r-5" aria-pressed="false">×5</button><button id="r-10" aria-pressed="true">×10</button><button id="r-30" aria-pressed="false">×30</button></div>
+</div>
+<div class="fig"><canvas id="cv" aria-label="Animated cross-section of the brewer through a whole brew"></canvas></div>
+<div class="time"><button class="btn" id="play" aria-pressed="true">Pause</button><input id="scrub" type="range" min="0" max="373" step="0.5" value="0" aria-label="Brew time"><span class="clock" id="clock">0:00</span></div>
+<div class="phase" id="phase"></div>
+<div class="legend"><span id="lgTitle"></span><div class="bar" id="lgBar"></div><div class="ticks" id="lgTicks"></div></div>
+<div class="keys"><span><i class="dot" style="background:#fff"></i>water on its way</span><span><i class="dot" style="background:#6b3a17"></i>passed through the coffee bed</span><span><i class="dot" style="background:#2f9ad0"></i>escaped through the paper above the bed</span><span>Dots show the two routes; the flow split itself is in “Right now”.</span></div>
+<div class="probe" id="probe" aria-live="polite">Hover over or tap any part of the section to read its temperature, speed, pressure and strength at this moment of the brew.</div>
+</div>
+<div>
+<h2>Right now</h2>
+<div class="live" id="live"></div>
+<h2>Basket level through the brew</h2>
+<div class="chart"><svg id="chart" role="img" aria-label="Basket liquid level against brew time"></svg></div>
+<p class="note">Height of the free surface above the basket floor. The dashed line is the top of the coffee bed. Tap the chart to jump to that moment.</p>
+<h2 style="margin-top:22px">Station by station, steady brewing</h2>
+<table class="stack"><thead><tr><th>Section</th><th>Temp</th><th>Speed</th><th>Pressure</th></tr></thead><tbody id="tbl"></tbody></table>
+<p class="note">Pressure is gauge (above atmospheric).</p>
+</div>
+</div>
+</section>
+<section class="band method" style="padding-top:0">
+<details><summary>How this was computed and what is assumed</summary>
+<ul>
+<li><b>Brew basket, with a free surface</b>: time-accurate 2D Navier–Stokes with Darcy–Brinkman drag for the coffee bed and filter paper, on a 1 mm grid. The liquid surface is held at atmospheric pressure. Its height comes from the mass balance (spray in minus drip-stop out) and moves freely through the brew. The surface is treated as flat: at these speeds waves are far below 1 mm, and the cost of resolving them would buy nothing. Temperature (with heat loss through the basket wall and surface) and dissolved coffee are carried along with the flow.</li>
+<li><b>Calibration</b>: a fixed lid hides how high the water actually stands. With a free surface the bed and paper resistance have to keep the level inside the cone, so they are tuned to a medium grind (bed permeability 3×10⁻¹² m²; paper resistance 2×10⁹ m⁻¹). The bed's share of the flow therefore differs a little from the earlier fixed-lid runs.</li>
+<li><b>Reservoir</b>: 2D Navier–Stokes, 20 °C water. The level falls by volume as the heater draws 3.7 mL/s. The tank's taper is from the product photo, with a depth chosen so 1.25 L fills it to the top mark. The flow pattern comes from the mid-brew solution and is shown at each level.</li>
+<li><b>Feed tube, copper coil, glass riser, spray arm</b>: a 1D energy balance with a drift-flux two-phase model. A 1,375 W brew element heats 3.7 mL/s from 20 to 100 °C (1,237 W). The rest boils 1.7% of the flow, and that steam lifts the water with no pump. The heater stops when the reservoir is empty, as the real machine does.</li>
+<li><b>Carafe</b>: the level follows the cumulative drip-stop flow, using the carafe's round bulb shape. Its temperature and strength are the mixed average of what has arrived. Heat loss through the glass is ignored here; the hotplate then holds the coffee at 79–85 °C.</li>
+<li>Geometry is traced from a labelled front-view product photo and scaled to the 356 mm (14") height, not measured from a machine. Tracer speeds are log-scaled so that slow and fast regions are both visible. The probe always reports the true value.</li>
+</ul></details>
+</section>
+<script>
+{
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');const $=id=>document.getElementById(id);
+let D,BR,R,PATH,field='T',playing=true,clockRate=10,t=0,s=1,pad=8,Wpx=0,Hpx=0,bgLayer=null,fgLayer=null,lastSnapKey='';
+const TANK=[[12,197],[105,197],[122,340],[0,340]],DR=92,QMM=3700,RHO=998,G=9.81;
+const dec=(b,sc,u8,off=0)=>{const bin=atob(b),n=bin.length,buf=new Uint8Array(n);for(let i=0;i<n;i++)buf[i]=bin.charCodeAt(i);return u8?(sc?Float32Array.from(buf,x=>x/sc+off):buf):Float32Array.from(new Int16Array(buf.buffer),x=>x/sc)};
+const lerp=(a,b,f)=>a+(b-a)*f,clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const ramp=st=>{const c=st.map(hex);return f=>{f=clamp(f,0,1)*(c.length-1);const i=Math.min(c.length-2,Math.floor(f)),g=f-i;return c[i].map((v,k)=>Math.round(lerp(v,c[i+1][k],g)))}};
+const MAPS={
+ T:{title:'Temperature (°C)',f:ramp(['#2c6fbb','#e9e5e0','#c22f24']),n:v=>(v-15)/85,ticks:[15,35,55,75,100]},
+ U:{title:'Flow speed (mm/s, log scale)',f:ramp(['#eaf2fb','#6aaed6','#08306b']),n:v=>(Math.log10(Math.max(v,1e-3))+2)/(Math.log10(3000)+2),ticks:[0.01,0.1,1,10,100,1000]},
+ P:{title:'Gauge pressure (Pa)',f:ramp(['#fff3e6','#fd8d3c','#7f2704']),n:v=>v/2400,ticks:[0,600,1200,1800,2400]},
+ C:{title:'Dissolved coffee (fraction of saturation)',f:ramp(['#f7efe3','#c48a4e','#3e2210']),n:v=>v/0.6,ticks:[0,0.15,0.3,0.45,0.6]}};
+const rgb=(v,f=field)=>MAPS[f].f(MAPS[f].n(v)),col=(v,a=1)=>{const c=rgb(v);return `rgba(${c[0]},${c[1]},${c[2]},${a})`};
+const X=x=>pad+x*s,Y=y=>Hpx-pad-y*s;
+const cvar=n=>{const e=document.createElement('span');e.style.color=`var(${n})`;document.body.appendChild(e);const c=getComputedStyle(e).color;e.remove();return c};
+/* ---------- reservoir & carafe volumes ---------- */
+const wTank=y=>93+29*(y-197)/143;
+function tankLevel(V){if(V<=0)return 197;let lo=197,hi=340;for(let k=0;k<40;k++){const m=(lo+hi)/2,vm=DR*(93*(m-197)+29/143*(m-197)**2/2);if(vm<V)lo=m;else hi=m}return lo}
+const V0=1.25e6;let TB;
+const resLevel=tt=>tankLevel(V0-QMM*Math.min(tt,TB));
+let carCum=[],carProf=[];
+function carHW(y){const pr=D.layout.carafe_profile;if(y<=pr[0][0])return pr[0][1];for(let i=0;i<pr.length-1;i++)if(y<=pr[i+1][0])return lerp(pr[i][1],pr[i+1][1],(y-pr[i][0])/(pr[i+1][0]-pr[i][0]));return pr[pr.length-1][1]}
+function carLevel(V){let acc=0;for(let y=47;y<200;y+=0.5){acc+=Math.PI*carHW(y)**2*0.5;if(acc>=V)return y}return 200}
+/* ---------- basket time series ---------- */
+const hist=tt=>{const H=BR.hist;if(tt<=H[0][0])return[H[0][1],H[0][2]*(tt>0?1:0)];const i=clamp(Math.floor(tt)-1,0,H.length-2),f=clamp(tt-H[i][0],0,1);return[lerp(H[i][1],H[i+1][1],f),lerp(H[i][2],H[i+1][2],f)]};
+const brewing=()=>t<TB;
+let SN=[];const snapF=tt=>clamp(tt/15,0,SN.length-1);
+function snapAt(tt){const f=snapF(tt),i=Math.min(Math.floor(f),SN.length-2);return{i,f:f-i}}
+const Bo=()=>D.layout.basket_origin;
+function bCell(x,y){const o=Bo(),i=Math.floor(x-o[0]),j=Math.floor(y-o[1]);return(i<0||j<0||i>=BR.nx||j>=BR.ny)?-1:j*BR.nx+i}
+const bSurf=()=>Bo()[1]+hist(t)[0];
+function inBas(x,y){const k=bCell(x,y);return k>=0&&BR.Z[k]!==0&&y<bSurf()}
+function bVal(arr,k){const{i,f}=snapAt(t);return lerp(SN[i][arr][k],SN[i+1][arr][k],f)}
+function bSamp(x,y){const o=Bo(),{i,f}=snapAt(t),a=SN[i],b=SN[i+1],fx=x-o[0]-.5,fy=y-o[1]-.5;let ii=clamp(Math.floor(fx),0,BR.nx-2),jj=clamp(Math.floor(fy),0,BR.ny-2);const tx=fx-ii,ty=fy-jj,k=jj*BR.nx+ii,n=BR.nx;
+ const bl=A=>lerp(lerp(A[k],A[k+1],tx),lerp(A[k+n],A[k+n+1],tx),ty);return[lerp(bl(a.u),bl(b.u),f),lerp(bl(a.v),bl(b.v),f)]}
+/* ---------- reservoir field ---------- */
+function rCell(x,y){const i=Math.floor(x-R.ox),j=Math.min(Math.floor(y-R.oy),R.ny-1);return(i<0||j<0||i>=R.nx)?-1:j*R.nx+i}
+function inTank(x,y){return y>197&&y<resLevel(t)&&x>12-12*(y-197)/143&&x<105+17*(y-197)/143}
+function rSamp(x,y){const fx=x-R.ox-.5,fy=Math.min(y-R.oy-.5,R.ny-1.01);let i=clamp(Math.floor(fx),0,R.nx-2),j=clamp(Math.floor(fy),0,R.ny-2);const tx=fx-i,ty=clamp(fy-j,0,1),k=j*R.nx+i,n=R.nx;
+ const bl=A=>lerp(lerp(A[k],A[k+1],tx),lerp(A[k+n],A[k+n+1],tx),ty);return[bl(R.u),bl(R.v)]}
+/* ---------- pipe network ---------- */
+function pipeVals(i){const k=PATH.kind[i],y=PATH.y[i],L=resLevel(t),on=brewing();
+ const pcTop=Math.max(0,RHO*G*(L-190)/1000);let P=0;
+ if(k<=1)P=Math.max(0,RHO*G*(L-y)/1000);else if(k===2&&on)P=pcTop*(1-(PATH.s[i]-sR0)/(sR1-sR0));
+ return{T:PATH.T[i],U:on?PATH.U[i]:0,P:on||k<=1?P:0,C:0,void:on?PATH.void[i]:0,k}}
+function pathAt(sv){const S=PATH.s;let lo=0,hi=S.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(S[m]<=sv)lo=m;else hi=m}const f=clamp((sv-S[lo])/((S[hi]-S[lo])||1),0,1);return{x:lerp(PATH.x[lo],PATH.x[hi],f),y:lerp(PATH.y[lo],PATH.y[hi],f),U:PATH.U[lo],void:PATH.void[lo],i:lo}}
+let sEnd,sBoil,sR0,sR1;
+/* ---------- carafe mixing ---------- */
+function carafeState(tt){let V=0,TT=0,CC=0;const dt=1;for(let x=0;x<tt;x+=dt){const q=hist(x)[1]*QMM*Math.min(dt,tt-x);const{i,f}=snapAt(x);const To=lerp(SN[i].T_out,SN[i+1].T_out,f),Co=lerp(SN[i].C_out,SN[i+1].C_out,f);V+=q;TT+=q*To;CC+=q*Co}
+ return{V,T:V>0?TT/V:92,C:V>0?CC/V:0,level:V>0?carLevel(V):47}}
+let car={V:0,T:92,C:0,level:47},carT=-1;
+/* ---------- rasters ---------- */
+const rcache={};
+function basketRaster(si,f){const key=f+si;if(rcache[key])return rcache[key];const c=document.createElement('canvas');c.width=BR.nx;c.height=BR.ny;const x=c.getContext('2d'),im=x.createImageData(BR.nx,BR.ny),S=SN[si],jw=Math.max(0,Math.ceil(S.h-.5)-1);
+ for(let i=0;i<BR.nx;i++){let last=null;for(let j=0;j<BR.ny;j++){const k=j*BR.nx+i,p=((BR.ny-1-j)*BR.nx+i)*4;if(BR.Z[k]===0){im.data[p+3]=0;continue}
+  let v;if(j<=jw){v=f==='T'?S.T[k]:f==='P'?S.P[k]:f==='C'?S.C[k]:Math.hypot(S.u[k],S.v[k]);last=v}else v=last??(f==='T'?92:0);
+  const c3=rgb(v,f);im.data[p]=c3[0];im.data[p+1]=c3[1];im.data[p+2]=c3[2];im.data[p+3]=255}}
+ x.putImageData(im,0,0);return rcache[key]=c}
+let resRast=null;
+function reservoirRaster(){if(resRast)return resRast;const H=340-187,c=document.createElement('canvas');c.width=R.nx;c.height=H;const x=c.getContext('2d'),im=x.createImageData(R.nx,H);
+ for(let j=0;j<H;j++)for(let i=0;i<R.nx;i++){const jj=Math.min(j,R.ny-1),k=jj*R.nx+i,p=((H-1-j)*R.nx+i)*4,v=Math.hypot(R.u[k],R.v[k]);const c3=rgb(Math.max(v,0.3),'U');im.data[p]=c3[0];im.data[p+1]=c3[1];im.data[p+2]=c3[2];im.data[p+3]=255}
+ x.putImageData(im,0,0);return resRast=c}
+/* ---------- drawing ---------- */
+const poly=(g,pts)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y)));g.closePath()};
+const bg=()=>BR.geo,hwAt=ym=>bg().hw0+(bg().hwT-bg().hw0)/(bg().yT-bg().y0)*(ym-bg().y0);
+function carafePoly(){const L=D.layout,cx=L.carafe_cx,pr=L.carafe_profile;return pr.map(([y,w])=>[cx-w,y]).concat(pr.slice().reverse().map(([y,w])=>[cx+w,y]))}
+function buildLayers(){const steel=cvar('--steel'),steel2=cvar('--steel2'),ink=cvar('--ink'),bgc=cvar('--bg');
+ const mk=()=>{const c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;const g=c.getContext('2d');g.scale(devicePixelRatio,devicePixelRatio);return[c,g]};
+ const L=D.layout,o=Bo(),cx=o[0]+60,G0=bg();
+ let[c,g]=mk();const rect=(x0,y0,x1,y1,fill,stroke)=>{g.beginPath();g.rect(X(x0),Y(y1),(x1-x0)*s,(y1-y0)*s);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=1;g.stroke()}};
+ rect(0,0,316,40,steel2,steel);rect(140,40,262,46,'#6b6f73');rect(6,40,92,197,steel2,steel);rect(60,338,232,356,steel2,steel);rect(0,340,124,356,steel2,steel);
+ bgLayer=c;[c,g]=mk();
+ g.strokeStyle=steel;g.lineWidth=Math.max(1.2,2*s);poly(g,TANK);g.stroke();
+ g.lineWidth=Math.max(1.5,3*s);g.beginPath();g.moveTo(X(cx-hwAt(G0.yT)-2),Y(o[1]+G0.yT));g.lineTo(X(cx-G0.hw0-2),Y(o[1]+G0.y0-2));g.lineTo(X(cx+G0.hw0+2),Y(o[1]+G0.y0-2));g.lineTo(X(cx+hwAt(G0.yT)+2),Y(o[1]+G0.yT));g.stroke();
+ rect(cx-hwAt(G0.yT)-4,o[1]+G0.yT,cx+hwAt(G0.yT)+4,o[1]+G0.yT+8,steel2,steel);
+ g.strokeStyle=steel;g.lineWidth=Math.max(1.5,3*s);g.beginPath();g.moveTo(X(cx+hwAt(G0.yT)+2),Y(o[1]+G0.yT-4));g.lineTo(X(cx+hwAt(G0.yT)+18),Y(o[1]+G0.yT-10));g.lineTo(X(cx+hwAt(G0.yT)+18),Y(o[1]+G0.yT-60));g.lineTo(X(cx+hwAt(60)+2),Y(o[1]+60));g.stroke();
+ g.lineWidth=Math.max(1.2,2*s);poly(g,carafePoly());g.stroke();rect(L.carafe_cx-38,L.lid[0],L.carafe_cx+38,L.lid[1],steel2,steel);
+ g.beginPath();g.moveTo(X(L.carafe_cx+62),Y(170));g.quadraticCurveTo(X(L.carafe_cx+98),Y(150),X(L.carafe_cx+66),Y(80));g.strokeStyle=steel;g.lineWidth=Math.max(2,5*s);g.stroke();
+ rect(L.spray[0]-24,L.spray[1],L.spray[0]+24,L.spray[1]+3,'#8d9296');
+ g.setLineDash([4,3]);g.strokeStyle='rgba(60,40,20,.55)';g.lineWidth=1;const yb=o[1]+BR.ybed,hb=hwAt(BR.ybed)-1.5;g.beginPath();g.moveTo(X(cx-hb),Y(yb));g.lineTo(X(cx+hb),Y(yb));g.stroke();g.setLineDash([]);
+ const fs=Wpx<460?11:13;g.font=`500 ${fs}px Barlow,sans-serif`;g.textBaseline='middle';
+ const lab=(tx,x,y,al='left')=>{g.textAlign=al;g.lineWidth=3;g.strokeStyle=bgc;g.strokeText(tx,X(x),Y(y));g.fillStyle=ink;g.fillText(tx,X(x),Y(y))};
+ lab('Reservoir',36,332,'center');lab(Wpx<460?'Riser':'Glass riser',80,318);lab(Wpx<460?'Heater':'Copper coil',49,60,'center');lab('Spray arm',236,347);
+ lab('Brew basket',316,332,'right');lab('Coffee bed',cx,o[1]+28,'center');lab('Carafe',222,190);lab('Hotplate',201,22,'center');
+ fgLayer=c}
+function drawDynamic(g){const L=D.layout,o=Bo(),cx=o[0]+60,G0=bg(),on=brewing(),lvl=resLevel(t),[hb,qr]=hist(t);
+ // reservoir water below the free surface
+ g.save();poly(g,TANK);g.clip();g.beginPath();g.rect(X(-5),Y(lvl),140*s,(lvl-190)*s);g.clip();
+ if(field==='U'){g.imageSmoothingEnabled=true;g.drawImage(reservoirRaster(),X(R.ox),Y(340),R.nx*s,(340-187)*s)}
+ else if(field==='P'){const gr=g.createLinearGradient(0,Y(lvl),0,Y(197));gr.addColorStop(0,col(0));gr.addColorStop(1,col(RHO*G*(lvl-197)/1000));g.fillStyle=gr;g.fillRect(X(-5),Y(lvl),140*s,(lvl-190)*s)}
+ else{g.fillStyle=col(field==='T'?20:0);g.fillRect(X(-5),Y(lvl),140*s,(lvl-190)*s)}
+ g.restore();if(lvl>197.5){g.strokeStyle='rgba(30,90,160,.8)';g.lineWidth=1.5;g.beginPath();g.moveTo(X(12-12*(lvl-197)/143),Y(lvl));g.lineTo(X(105+17*(lvl-197)/143),Y(lvl));g.stroke()}
+ // basket below its free surface
+ const{i,f}=snapAt(t),si=f>.5?i+1:i;g.save();g.beginPath();g.rect(X(o[0]),Y(o[1]+hb),120*s,(hb+2)*s);g.clip();g.imageSmoothingEnabled=true;g.drawImage(basketRaster(si,field),X(o[0]),Y(o[1]+BR.ny),BR.nx*s,BR.ny*s);g.restore();
+ g.strokeStyle='rgba(30,90,160,.8)';g.lineWidth=1.5;const hwS=hwAt(hb)-3.5;g.beginPath();g.moveTo(X(cx-hwS),Y(o[1]+hb));g.lineTo(X(cx+hwS),Y(o[1]+hb));g.stroke();
+ // carafe
+ g.save();poly(g,carafePoly());g.clip();
+ if(field==='P'){const gr=g.createLinearGradient(0,Y(car.level),0,Y(47));gr.addColorStop(0,col(0));gr.addColorStop(1,col(RHO*G*(car.level-47)/1000));g.fillStyle=gr}else g.fillStyle=col(field==='T'?car.T:field==='C'?car.C:qr>0.02?2:0.01);
+ g.fillRect(X(100),Y(car.level),200*s,(car.level-40)*s);g.restore();
+ // destratification tube
+ const tb=L.tube,{i:ii,f:ff}=snapAt(t),Tout=lerp(SN[ii].T_out,SN[ii+1].T_out,ff),Cout=lerp(SN[ii].C_out,SN[ii+1].C_out,ff);
+ const tv=field==='T'?Tout:field==='P'?0:field==='C'?Cout:qr*D.op.tube_speed;g.strokeStyle=cvar('--steel');g.lineWidth=10*s;g.beginPath();g.moveTo(X(tb[0]),Y(tb[2]+2));g.lineTo(X(tb[0]),Y(tb[1]));g.stroke();
+ g.strokeStyle=col(Math.max(tv,field==='U'?0.01:tv));g.lineWidth=7*s;g.beginPath();g.moveTo(X(tb[0]),Y(tb[2]+2));g.lineTo(X(tb[0]),Y(tb[1]));g.stroke();
+ // pipes
+ g.lineCap='round';for(let k=0;k<PATH.x.length-1;k++){g.strokeStyle=PATH.kind[k]===1?'#b5652b':cvar('--steel');g.lineWidth=(PATH.kind[k]===1?13:11)*s;g.beginPath();g.moveTo(X(PATH.x[k]),Y(PATH.y[k]));g.lineTo(X(PATH.x[k+1]),Y(PATH.y[k+1]));g.stroke()}
+ g.lineCap='butt';for(let k=0;k<PATH.x.length-1;k++){const pv=pipeVals(k),v=pv[field];g.strokeStyle=col(field==='U'?Math.max(v,0.01):v);g.lineWidth=8*s;g.beginPath();g.moveTo(X(PATH.x[k]),Y(PATH.y[k]));g.lineTo(X(PATH.x[k+1]),Y(PATH.y[k+1]));g.stroke()}
+ // jets while the heater runs
+ if(on){const ytop=L.spray[1],ybot=o[1]+hb;for(const jx of BR.jets){const x=o[0]+jx,gr=g.createLinearGradient(0,Y(ytop),0,Y(ybot));
+  const a=field==='T'?D.op.T_spray:field==='U'?30:0,b=field==='T'?D.op.T_jet:field==='U'?Math.sqrt(2*9810*(ytop-ybot)):0;gr.addColorStop(0,col(a));gr.addColorStop(1,col(b));g.strokeStyle=gr;g.lineWidth=Math.max(1.5,1.6*s);g.beginPath();g.moveTo(X(x),Y(ytop));g.lineTo(X(x),Y(ybot));g.stroke()}}
+}
+/* ---------- tracers ---------- */
+const parts=[],bubbles=[];let routes={bed:0,bypass:0};
+const disp=u=>26*Math.log10(1+Math.abs(u)/0.05);
+function spawn(p,mode,init){p.m=mode;p.t=0;p.trail=[];const L=D.layout,o=Bo();
+ if(mode==='res'){p.route=null;const lv=resLevel(t);if(lv<199){p.m='idle';return}let n=0;do{p.y=init?lerp(198,lv-0.5,Math.random()):lv-0.4;p.x=lerp(1,121,Math.random())}while(!inTank(p.x,p.y)&&n++<50)}
+ if(mode==='pipe'){p.s=init?Math.random()*sEnd:0;const q=pathAt(p.s);p.x=q.x;p.y=q.y}
+ if(mode==='bas'){let n=0;do{p.x=o[0]+Math.random()*120;p.y=o[1]+Math.random()*hist(t)[0]}while(!inBas(p.x,p.y)&&n++<200);p.route=null}
+ if(mode==='car'){p.x=L.tube[0]+(Math.random()-.5)*4;p.y=init?lerp(L.tube[1],Math.max(L.tube[1]+1,car.level-1),Math.random()):L.tube[1];p.vx=(Math.random()-.5)*2.2;if(init)p.route=Math.random()<0.56?'bed':'bypass'}}
+function initParts(){parts.length=0;routes={bed:0,bypass:0};const on=brewing(),mix=on?[['res',.3],['pipe',.14],['bas',.42],['car',.14]]:[['bas',.6],['car',.4]];
+ for(const[m,f]of mix)for(let k=0;k<Math.round(560*f);k++){const p={};spawn(p,m,true);parts.push(p)}
+ bubbles.length=0;for(let k=0;k<70;k++)bubbles.push({s:lerp(sBoil,sEnd,Math.random()),r:.6+Math.random()*.6})}
+function adv(p,samp,inside,dt){let rem=dt,guard=0;while(rem>0&&guard++<40){const[u,v]=samp(p.x,p.y),sp=Math.hypot(u,v)+1e-9,d=disp(sp),h=Math.min(rem,0.4/Math.max(d,1e-3));
+ const nx=p.x+u/sp*d*h,ny=p.y+v/sp*d*h;if(inside(nx,ny)){p.x=nx;p.y=ny}else if(inside(nx,p.y)&&Math.abs(nx-p.x)>1e-4){p.x=nx}else if(inside(p.x,ny)&&Math.abs(ny-p.y)>1e-4){p.y=ny}else{const jx=p.x+(Math.random()-.5)*.4,jy=p.y-Math.random()*.25;if(inside(jx,jy)){p.x=jx;p.y=jy}}rem-=h}}
+function step(dt){const L=D.layout,o=Bo(),tb=L.tube,on=brewing(),surf=bSurf();
+ for(const p of parts){p.t+=dt;if(p.m==='idle')continue;
+  if(p.m==='res'){if(!on){p.m='idle';continue}adv(p,rSamp,(x,y)=>inTank(x,y)||(y<=198&&x>15&&x<25),dt);const lv=resLevel(t);if(p.y>lv)p.y=lv-0.3;if(p.y<197.5&&p.x>15&&p.x<25)spawn(p,'pipe');else if(p.t>60)spawn(p,'res')}
+  else if(p.m==='pipe'){if(!on)continue;const q=pathAt(p.s);p.s+=disp(q.U)*dt;if(p.s>=sEnd){p.m='jet';p.x=o[0]+BR.jets[(Math.random()*BR.jets.length)|0]+(Math.random()-.5)*.6;p.y=L.spray[1];p.t=0}else{const q2=pathAt(p.s);p.x=q2.x;p.y=q2.y}}
+  else if(p.m==='jet'){p.y-=disp(Math.sqrt(2*9810*Math.max(L.spray[1]-p.y,.5))+30)*dt;if(p.y<=surf){p.m='bas';p.y=surf-0.4;p.t=0;p.route=null}}
+  else if(p.m==='bas'){adv(p,bSamp,inBas,dt);if(p.y>surf-0.2)p.y=surf-0.4;const k=bCell(p.x,p.y),z=k>=0?BR.Z[k]:0;if(z===3&&!p.route)p.route='bed';else if((z===1||z===2)&&!p.route&&p.y>o[1]+BR.ybed)p.route='bypass';
+   if(z===5&&p.y<o[1]+2){if(p.route)routes[p.route]++;p.m='tube';p.x=tb[0]+(Math.random()-.5)*3;p.y=tb[2];p.t=0}else if(p.t>90)spawn(p,on?'res':'bas')}
+  else if(p.m==='tube'){p.y-=disp(Math.max(hist(t)[1],.05)*D.op.tube_speed)*dt;if(p.y<=Math.min(tb[1],car.level))spawn(p,'car')}
+  else if(p.m==='car'){const up=disp(0.6),hw=carHW(p.y)-4;p.y+=up*dt*.6;p.x+=p.vx*up*dt;if(Math.abs(p.x-L.carafe_cx)>hw){p.vx*=-1;p.x=clamp(p.x,L.carafe_cx-hw,L.carafe_cx+hw)}if(p.y>=car.level-.5){if(on)spawn(p,'res');else{p.y=car.level-.6;p.vx*=0.98}}}
+  p.trail.push(p.x,p.y);if(p.trail.length>10)p.trail.splice(0,2)}
+ if(on)for(const b of bubbles){const q=pathAt(b.s);b.s+=disp(q.U*1.15)*dt;if(b.s>=sEnd-6)b.s=sBoil+Math.random()*4}}
+function drawParts(g){g.lineCap='round';
+ for(const p of parts){if(p.m==='idle')continue;const tr=p.trail;if(tr.length>=4){g.strokeStyle='rgba(20,16,12,.35)';g.lineWidth=1.2;g.beginPath();g.moveTo(X(tr[0]),Y(tr[1]));for(let k=2;k<tr.length;k+=2)g.lineTo(X(tr[k]),Y(tr[k+1]));g.stroke()}
+  g.beginPath();g.arc(X(p.x),Y(p.y),Math.max(1.7,1.05*s),0,7);g.fillStyle=p.route==='bed'?'#6b3a17':p.route==='bypass'?'#2f9ad0':'#fff';g.fill();g.lineWidth=1;g.strokeStyle=p.route?'rgba(255,255,255,.9)':'rgba(20,16,12,.7)';g.stroke()}
+ if(brewing())for(const b of bubbles){const q=pathAt(b.s);g.beginPath();g.arc(X(q.x),Y(q.y),Math.max(1.4,b.r*3.2*q.void*s),0,7);g.fillStyle='rgba(255,255,255,.85)';g.fill();g.strokeStyle='rgba(80,80,90,.6)';g.stroke()}}
+/* ---------- UI ---------- */
+const fmtU=u=>u<0.005?'0':u<1?u.toFixed(2)+' mm/s':u<1000?u.toFixed(u<10?1:0)+' mm/s':(u/1000).toFixed(2)+' m/s';
+const fmtP=p=>Math.abs(p)<1000?Math.round(p)+' Pa':(p/1000).toFixed(2)+' kPa';
+const mmss=x=>`${Math.floor(x/60)}:${String(Math.floor(x%60)).padStart(2,'0')}`;
+function phase(){const[h,q]=hist(t);if(t<TB){return t<150?'Filling: the spray brings in more than the drip-stop lets out, so the basket level climbs.':'Steady brewing: drip-out matches spray-in and the level holds.'}return t<BR.hist[BR.hist.length-1][0]-1?'Heater off (reservoir empty): the basket drains down to the bed.':'Brew finished: the wet bed keeps dripping slowly.'}
+function live(){const[h,q]=hist(t),lv=resLevel(t),Vres=Math.max(0,V0-QMM*Math.min(t,TB))/1000,{i,f}=snapAt(t),fb=lerp(SN[i].frac_bed,SN[i+1].frac_bed,f),tot=routes.bed+routes.bypass;
+ const it=[[`${Vres.toFixed(0)} mL`,'left in the reservoir'],[`${(h-bg().y0).toFixed(1)} mm`,'basket level above its floor'],[`${(q*100).toFixed(0)}%`,'drip-out as a share of spray-in'],[`${(fb*100).toFixed(0)}%`,'of the water passing through the bed'],[`${(car.V/1000).toFixed(0)} mL`,`in the carafe, ${car.T.toFixed(1)} °C`],[`${(100-fb*100).toFixed(0)}%`,'escaping through the paper above the bed']];
+ $('live').innerHTML=it.map(([a,b])=>`<div><b>${a}</b><span>${b}</span></div>`).join('')}
+function chart(){const svg=$('chart'),W=svg.clientWidth,H=svg.clientHeight;if(!W)return;const m={l:38,r:10,t:10,b:24},iw=W-m.l-m.r,ih=H-m.t-m.b,T1=BR.hist[BR.hist.length-1][0],y0=bg().y0;
+ const xs=v=>m.l+v/T1*iw,ys=v=>m.t+ih-(v-30)/(70-30)*ih,ink=cvar('--ink'),mute=cvar('--mute'),line=cvar('--line');
+ const pts=BR.hist.map(([tt,h])=>`${xs(tt).toFixed(1)},${ys(h-y0).toFixed(1)}`).join(' ');
+ let g='';for(const v of[30,40,50,60,70]){g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="${line}"/><text x="${m.l-6}" y="${ys(v)+4}" text-anchor="end" font-size="12" fill="${mute}">${v}</text>`}
+ for(const v of[0,60,120,180,240,300,360])if(v<=T1&&(W>420||v%120===0))g+=`<text x="${xs(v)}" y="${H-6}" text-anchor="middle" font-size="12" fill="${mute}">${mmss(v)}</text>`;
+ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${ys(BR.ybed-y0)}" y2="${ys(BR.ybed-y0)}" stroke="${mute}" stroke-dasharray="4 3"/>`;
+ g+=`<line x1="${xs(TB)}" x2="${xs(TB)}" y1="${m.t}" y2="${m.t+ih}" stroke="${mute}" stroke-dasharray="2 3"/><text x="${xs(TB)-4}" y="${m.t+12}" text-anchor="end" font-size="12" fill="${mute}">heater off</text>`;
+ g+=`<polyline points="${pts}" fill="none" stroke="#2f6db3" stroke-width="2" stroke-linejoin="round"/>`;
+ const h=hist(t)[0]-y0;g+=`<line x1="${xs(t)}" x2="${xs(t)}" y1="${m.t}" y2="${m.t+ih}" stroke="${ink}"/><circle cx="${xs(t)}" cy="${ys(h)}" r="5" fill="#2f6db3" stroke="${cvar('--bg')}" stroke-width="2"/>`;
+ svg.innerHTML=g;svg.dataset.m=JSON.stringify([m.l,iw,T1])}
+function legend(){const M=MAPS[field];$('lgTitle').textContent=M.title;const st=[];for(let k=0;k<=10;k++)st.push(`rgb(${M.f(k/10)})`);$('lgBar').style.background=`linear-gradient(90deg,${st.join(',')})`;$('lgTicks').innerHTML=M.ticks.map(v=>`<span>${v.toLocaleString()}</span>`).join('')}
+function setField(f){field=f;for(const k of['T','U','P','C'])$('f-'+k).setAttribute('aria-pressed',k===f);legend()}
+function probe(e){const r=cv.getBoundingClientRect(),xm=(e.clientX-r.left-pad)/s,ym=(Hpx-pad-(e.clientY-r.top))/s;let out=null;const L=D.layout,o=Bo();
+ let best=1e9,bi=-1;for(let k=0;k<PATH.x.length;k++){const d=Math.hypot(PATH.x[k]-xm,PATH.y[k]-ym);if(d<best){best=d;bi=k}}
+ if(best<6){const pv=pipeVals(bi),nm=['Cold feed tube','Copper boiling coil','Glass riser (steam lift)','Spray arm'][pv.k];out=`<b>${nm}</b><br>${pv.T.toFixed(1)} °C · ${fmtU(pv.U)} · ${fmtP(pv.P)}${pv.void>0.01?` · steam ${Math.round(pv.void*100)}% by volume`:''}${brewing()?'':' · heater off'}`}
+ else if(inTank(xm,ym)){const k=rCell(xm,ym);out=`<b>Reservoir</b><br>20.0 °C · ${fmtU(Math.hypot(R.u[k],R.v[k]))} · ${fmtP(RHO*G*(resLevel(t)-ym)/1000)}`}
+ else if(inBas(xm,ym)){const k=bCell(xm,ym),z=BR.Z[k],nm={1:'gap behind the paper',2:'filter paper',3:'coffee bed',4:'slurry above the bed',5:'drip-stop outlet'}[z];out=`<b>Brew basket: ${nm}</b><br>${bVal('T',k).toFixed(1)} °C · ${fmtU(Math.hypot(bVal('u',k),bVal('v',k)))} · ${fmtP(bVal('P',k))} · strength ${(bVal('C',k)*100).toFixed(0)}% of saturation`}
+ else if(Math.abs(xm-L.tube[0])<4&&ym>L.tube[1]&&ym<L.tube[2]){out=`<b>Destratification tube</b><br>carries the fresh coffee to the bottom of the carafe · ${fmtU(hist(t)[1]*D.op.tube_speed)}`}
+ else if(ym<car.level&&Math.abs(xm-L.carafe_cx)<carHW(ym)){out=`<b>Carafe</b><br>${(car.V/1000).toFixed(0)} mL · ≈${car.T.toFixed(1)} °C · ${fmtP(RHO*G*(car.level-ym)/1000)} · strength ${(car.C*100).toFixed(0)}% of saturation`}
+ if(out)$('probe').innerHTML=out}
+function table(){const o=D.op,S=SN[Math.min(18,SN.length-1)],rng=(k,a)=>{const v=PATH[a].filter((_,i)=>PATH.kind[i]===k);return[Math.min(...v),Math.max(...v)]};let rmax=0;for(let k=0;k<R.u.length;k++)if(R.z[k])rmax=Math.max(rmax,Math.hypot(R.u[k],R.v[k]));
+ let pmax=0;for(let k=0;k<S.P.length;k++)pmax=Math.max(pmax,S.P[k]);
+ const row=(a,b,c,d)=>`<tr><td>${a}</td><td class="n">${b}</td><td class="n">${c}</td><td class="n">${d}</td></tr>`;
+ $('tbl').innerHTML=[row('Reservoir','20 °C',`0.4–${rmax.toFixed(1)} mm/s`,'0–1.3 kPa (falls as it empties)'),row('Copper coil','20→100 °C',`${fmtU(o.jl*1000)}→${o.j.toFixed(1)} m/s`,'up to 2.3 kPa'),
+ row('Glass riser',`100 °C, ${Math.round(o.void*100)}% steam`,`${o.j.toFixed(1)} m/s`,'→ 0'),row('Spray arm & jets',`${o.T_spray}→${o.T_jet} °C`,'≤0.9 m/s','0'),
+ row('Brew basket',`${o.T_jet}→${S.T_out.toFixed(0)} °C`,'0.05–20 mm/s',`0–${fmtP(pmax)}`),row('Destratification tube',`${S.T_out.toFixed(0)} °C`,fmtU(o.tube_speed),'≈0'),row('Carafe','mixed average','slow','0–1.3 kPa')].join('')}
+function kpis(){const H=BR.hist,y0=bg().y0,hs=Math.max(...H.map(r=>r[1])),t95=H.find(r=>r[1]-H[0][1]>=0.95*(hs-H[0][1]))[0],S=SN[Math.min(18,SN.length-1)],last=SN[SN.length-1];
+ const k=[[`${(hs-y0).toFixed(0)} mm`,`settled basket level, ${Math.round((hs-y0)/(bg().yT-y0)*100)}% of the cone's depth`],[mmss(t95),'to reach that level'],[`${Math.round(H[H.length-1][0]-TB)} s`,'drawdown after the heater stops'],[`${Math.round(S.frac_bed*100)}% → ${Math.round(last.frac_bed*100)}%`,'share through the bed, steady → draining'],[`${S.T_out.toFixed(0)} °C`,'coffee leaving the drip-stop']];
+ $('kpis').innerHTML=k.map(([a,b])=>`<div class="kpi"><b>${a}</b><span>${b}</span></div>`).join('')}
+function setTime(x,reinit){t=clamp(x,0,+$('scrub').max);if(reinit){car=carafeState(t);carT=t;initParts()}}
+function resize(){const r=cv.getBoundingClientRect();Wpx=r.width;Hpx=r.height;cv.width=Math.round(Wpx*devicePixelRatio);cv.height=Math.round(Hpx*devicePixelRatio);
+ s=Math.min((Wpx-16)/D.layout.W,(Hpx-16)/D.layout.H);pad=Math.max(6,(Wpx-D.layout.W*s)/2);buildLayers();chart()}
+let last=performance.now(),acc=0;
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(playing){t+=dt*clockRate;const T1=+$('scrub').max;if(t>=T1){t=T1;playing=false;$('play').textContent='Replay';$('play').setAttribute('aria-pressed',false)}step(dt)}
+ if(Math.abs(t-carT)>=1){car=carafeState(t);carT=t}
+ ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);if(bgLayer)ctx.drawImage(bgLayer,0,0);ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ drawDynamic(ctx);ctx.setTransform(1,0,0,1,0,0);if(fgLayer)ctx.drawImage(fgLayer,0,0);ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);drawParts(ctx);
+ acc+=dt;if(acc>.2){acc=0;$('scrub').value=t;$('clock').textContent=`${mmss(t)} / ${mmss(+$('scrub').max)}`;$('phase').textContent=phase();live();chart()}
+ requestAnimationFrame(loop)}
+for(const k of['T','U','P','C'])$('f-'+k).addEventListener('click',()=>setField(k));
+for(const r of[5,10,30])$('r-'+r).addEventListener('click',()=>{clockRate=r;for(const q of[5,10,30])$('r-'+q).setAttribute('aria-pressed',q===r)});
+$('play').addEventListener('click',e=>{if(!playing&&t>=+$('scrub').max)setTime(0,true);playing=!playing;e.target.textContent=playing?'Pause':'Play';e.target.setAttribute('aria-pressed',playing)});
+$('scrub').addEventListener('input',e=>{setTime(+e.target.value,true)});
+$('chart').addEventListener('click',e=>{const svg=$('chart'),[ml,iw,T1]=JSON.parse(svg.dataset.m||'[0,1,1]'),r=svg.getBoundingClientRect();setTime(clamp((e.clientX-r.left-ml)/iw,0,1)*T1,true)});
+cv.addEventListener('pointermove',probe);cv.addEventListener('pointerdown',probe);
+Promise.all([fetch('data.json').then(r=>r.json()),fetch('brew.json').then(r=>r.json())]).then(([d,b])=>{D=d;BR=b;TB=b.t_brew;
+ const rr=d.reservoir;R={nx:rr.nx,ny:rr.ny,ox:d.layout.res_origin[0],oy:d.layout.res_origin[1],u:dec(rr.u,1000),v:dec(rr.v,1000),z:dec(rr.zone,0,true)};
+ BR.Z=dec(b.zone,0,true);SN=b.snaps.map(q=>({h:q.h,frac_bed:q.frac_bed,T_out:q.T_out,C_out:q.C_out,u:dec(q.u,1000),v:dec(q.v,1000),P:dec(q.P,10),T:dec(q.T,10,true,70),C:dec(q.C,250,true)}));
+ PATH=Object.assign({},d.path);PATH.s=[0];for(let k=1;k<PATH.x.length;k++)PATH.s.push(PATH.s[k-1]+Math.hypot(PATH.x[k]-PATH.x[k-1],PATH.y[k]-PATH.y[k-1]));
+ sEnd=PATH.s[PATH.s.length-1];sBoil=PATH.s[PATH.void.findIndex(v=>v>0)];sR0=PATH.s[PATH.kind.indexOf(2)];sR1=PATH.s[PATH.kind.indexOf(3)];
+ $('scrub').max=b.hist[b.hist.length-1][0];
+ kpis();table();legend();setTime(0,true);
+ const ro=new ResizeObserver(()=>resize());ro.observe(cv);const ro2=new ResizeObserver(()=>chart());ro2.observe($('chart'));resize();
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){playing=false;$('play').textContent='Play';setTime(200,true)}
+ requestAnimationFrame(loop)}).catch(()=>{$('probe').textContent='Could not load the simulation data.'});
+}
+</script></body></html>
